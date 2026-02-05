@@ -2,11 +2,14 @@ import TaskInput from "./components/TaskInput"
 import TodoItem from "./components/TodoItem"
 import AddTask from "./components/AddTask"
 import EditTask from "./components/EditTask"
-import { useState } from "react"
+import FilterBar from "./components/FilterBar"
+import { useState, useEffect } from "react"
 
 function App() {
   const [showAddTask, setShowAddTask] = useState(false)
   const [editingTask, setEditingTask] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [darkMode, setDarkMode] = useState(false)
   const [tasks, setTasks] = useState([
     {
       "id": 1,
@@ -54,14 +57,42 @@ function App() {
     } : task ))
   }
 
+  // Filter tasks based on current filter
+  const filteredTasks = tasks.filter(task => {
+    if (filter === 'reminder') return task.reminder
+    if (filter === 'not-important') return !task.reminder
+    return true // 'all' shows everything
+  })
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode)
+  }
+
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode')
+    } else {
+      document.body.classList.remove('dark-mode')
+    }
+  }, [darkMode])
+
   return (
-    <div className="container">
-      <TaskInput title='To-Do List App' onAdd={() => setShowAddTask(!showAddTask)} showAdd={showAddTask}/>
+    <div className={`container ${darkMode ? 'dark-mode' : ''}`}>
+      <TaskInput 
+        title='To-Do List App' 
+        onAdd={() => setShowAddTask(!showAddTask)} 
+        showAdd={showAddTask}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
+      />
       {showAddTask && <AddTask onAdd={addTask}/>}
       {editingTask && <EditTask task={editingTask} onUpdate={updateTask} onCancel={() => setEditingTask(null)}/>}
-      {tasks.length > 0 ? (
-        <TodoItem tasks={tasks} onEdit={editTask} onDelete={deleteTask} onToggle={toggleReminder}/>
-        ) : 'No anything to do'}
+      <FilterBar currentFilter={filter} onFilterChange={setFilter} />
+      {filteredTasks.length > 0 ? (
+        <TodoItem tasks={filteredTasks} onEdit={editTask} onDelete={deleteTask} onToggle={toggleReminder}/>
+        ) : 'No tasks to show'}
     </div>
   )
 }
